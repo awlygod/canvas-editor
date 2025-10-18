@@ -17,8 +17,6 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
   - Move, resize, and rotate any object
   - Delete and clear canvas options
 
-## 🚀 Quick Start
-
 ### Prerequisites
 
 - Node.js (v14 or higher)
@@ -38,14 +36,8 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
    npm install
    ```
 
-3. **Set up Firebase**
-   - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create a new project
-   - Enable Firestore Database
-   - Go to Project Settings > General
-   - Copy your Firebase configuration
 
-4. **Configure environment variables**
+3. **Configure environment variables**
    
    Create a `.env` file in the root directory:
    ```env
@@ -57,16 +49,16 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
    VITE_FIREBASE_APP_ID=your_app_id
    ```
 
-5. **Start the development server**
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+5. **Open your browser**
    
    Navigate to `http://localhost:5173`
 
-## 📖 How to Use
+## How to Use
 
 ### Creating a New Canvas
 
@@ -102,31 +94,8 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
 2. Share the URL with others
 3. Multiple users can view and edit the same canvas in real-time
 
-## 🏗️ Project Structure
 
-```
-canvas-editor/
-├── src/
-│   ├── components/
-│   │   ├── Canvas.jsx           # Main canvas component
-│   │   ├── Toolbar.jsx          # Toolbar with editing tools
-│   │   └── ColorPicker.jsx      # Color selection component
-│   ├── hooks/
-│   │   └── useCanvas.jsx        # Custom hook for canvas logic
-│   ├── pages/
-│   │   ├── LandingPage.jsx      # Home page
-│   │   └── CanvasPage.jsx       # Canvas editor page
-│   ├── services/
-│   │   ├── firebase.js          # Firebase configuration
-│   │   └── canvasService.js     # Firestore operations
-│   ├── App.jsx                  # Main app component
-│   └── main.jsx                 # Entry point
-├── .env                         # Environment variables
-├── package.json                 # Dependencies
-└── vite.config.js              # Vite configuration
-```
-
-## 🔧 Tech Stack
+## Tech Stack
 
 - **Frontend**: React 18 with Vite
 - **Canvas Library**: Fabric.js 6.x
@@ -134,7 +103,7 @@ canvas-editor/
 - **Routing**: React Router v6
 - **Styling**: Inline CSS (no external libraries)
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### Firestore Collection: `canvases`
 
@@ -150,7 +119,7 @@ canvas-editor/
         width: 100,
         height: 100,
         fill: "#3498db",
-        // ... other fabric.js properties
+        // ... similarly other fabric.js properties
       }
     ],
     background: "#ffffff"
@@ -160,7 +129,7 @@ canvas-editor/
 }
 ```
 
-## 🔄 How It Works
+## How It Works ??
 
 ### Canvas Creation Flow
 
@@ -220,96 +189,7 @@ Canvas reloads with new data
 User B sees User A's changes
 ```
 
-## 🛠️ Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## 🎨 Customization
-
-### Changing Canvas Size
-
-Edit `useCanvas.jsx`:
-```javascript
-fabricCanvasRef.current = new fabric.Canvas(canvasRef.current, {
-  width: 1200,  // Change width
-  height: 800,  // Change height
-  backgroundColor: '#ffffff',
-});
-```
-
-### Changing Auto-Save Interval
-
-Edit `CanvasPage.jsx`:
-```javascript
-const interval = setInterval(async () => {
-  // ...
-}, 10000); // Change to 10 seconds (10000ms)
-```
-
-### Adding Custom Shapes
-
-Edit `useCanvas.jsx`:
-```javascript
-const addTriangle = () => {
-  const triangle = new fabric.Triangle({
-    left: 100,
-    top: 100,
-    fill: 'green',
-    width: 100,
-    height: 100,
-  });
-  fabricCanvasRef.current.add(triangle);
-};
-```
-
-## 🐛 Troubleshooting
-
-### Canvas not loading
-- Check browser console for errors
-- Verify Firebase credentials in `.env`
-- Ensure Firestore rules allow read/write access
-
-### Objects not appearing after reload
-- Check if `canvasJSON` exists in Firestore
-- Open browser console and look for "Canvas loaded successfully" message
-- Verify the canvas ID in the URL matches Firestore document ID
-
-### Real-time sync not working
-- Check if Firestore snapshot listener is active
-- Verify network connection
-- Check Firestore quota limits
-
-## 🔐 Security Notes
-
-**⚠️ Important**: The `.env` file contains sensitive Firebase credentials. 
-
-For production:
-1. Add `.env` to `.gitignore`
-2. Set up Firebase Security Rules:
-   ```javascript
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{database}/documents {
-       match /canvases/{canvas} {
-         allow read, write: if true; // Update with proper auth
-       }
-     }
-   }
-   ```
-3. Enable Firebase Authentication for user-based access control
-
-## 📝 License
-
-MIT License - feel free to use this project for personal or commercial purposes.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Support
+## Thanks !
 
 For issues or questions, please open an issue on GitHub.
 

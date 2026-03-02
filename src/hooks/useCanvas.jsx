@@ -2,24 +2,165 @@ import { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import { canvasService } from '../services/canvasService';
 
-export const useCanvas = (canvasId) => {
-  const canvasRef = useRef(null);
-  const fabricCanvasRef = useRef(null);
+const HEADER_H  = 52;
+const STATUS_H  = 28;
+
+export const useCanvas = (canvasId, user) => {
+  const canvasRef        = useRef(null);
+  const fabricCanvasRef  = useRef(null);
   const [selectedTool, setSelectedTool] = useState('select');
-  const [isDrawing, setIsDrawing] = useState(false);
-  const isSavingRef = useRef(false);
+  const [zoomLevel, setZoomLevel]       = useState(100);
+  const [selectedBounds, setSelectedBounds] = useState(null); // { x, y } for layer toolbar
+  const isSavingRef      = useRef(false);
+  const debounceTimer    = useRef(null);
+  const lastSavedBy      = useRef(null); // uid of whoever triggered the last Firestore write
+  const isPanning        = useRef(false);
+  const lastPan          = useRef({ x: 0, y: 0 });
+  const spacePressed     = useRef(false);
+  const handlersRef      = useRef({});
+  // Keep a stable ref to canvasId and user so event callbacks stay fresh
+  const canvasIdRef      = useRef(canvasId);
+  const userRef          = useRef(user);
+  useEffect(() => { canvasIdRef.current = canvasId; }, [canvasId]);
+  useEffect(() => { userRef.current = user; }, [user]);
 
   useEffect(() => {
     let unsubscribe;
     
     const initCanvas = async () => {
       if (canvasRef.current && !fabricCanvasRef.current) {
-        // Create new fabric canvas
+        const w = window.innerWidth;
+        const h = window.innerHeight - HEADER_H - STATUS_H;
+
+        // Create new fabric canvas — fills the viewport
         fabricCanvasRef.current = new fabric.Canvas(canvasRef.current, {
-          width: 800,
-          height: 600,
+          width: w,
+          height: h,
           backgroundColor: '#ffffff',
+          selection: true,
+          selectionColor:        'rgba(74,144,217,0.08)',
+          selectionBorderColor:  'rgba(74,144,217,0.4)',
+          selectionLineWidth:    1,
         });
+
+        const fc = fabricCanvasRef.current;
+
+        // Remove selection borders & controls globally
+        fabric.FabricObject.ownDefaults = {
+          ...fabric.FabricObject.ownDefaults,
+          borderColor:        'transparent',
+          cornerColor:        'rgba(255,255,255,0.9)',
+          cornerStrokeColor:  'transparent',
+          cornerSize:         8,
+          cornerStyle:        'circle',
+          transparentCorners: false,
+          hasBorders:         false,
+        };
+
+        /* ── resize to always fill viewport ── */
+        const handleResize = () => {
+          if (!fabricCanvasRef.current) return;
+          fabricCanvasRef.current.setWidth(window.innerWidth);
+          fabricCanvasRef.current.setHeight(window.innerHeight - HEADER_H - STATUS_H);
+          fabricCanvasRef.current.renderAll();
+        };
+        window.addEventListener('resize', handleResize);
+
+        /* ── zoom via Ctrl+wheel ── */
+        fc.on('mouse:wheel', (opt) => {
+          if (!opt.e.ctrlKey) return;
+          opt.e.preventDefault();
+          let zoom = fc.getZoom() * (0.999 ** opt.e.deltaY);
+          zoom = Math.min(Math.max(zoom, 0.1), 5);
+          fc.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+          setZoomLevel(Math.round(zoom * 100));
+        });
+
+        /* ── pan via Space+drag or middle mouse ── */
+        const onKeyDown = (e) => {
+          if (e.code === 'Space' && !e.target.closest('input, textarea')) {
+            spacePressed.current = true;
+            fc.defaultCursor = 'grab';
+            fc.renderAll();
+          }
+        };
+        const onKeyUp = (e) => {
+          if (e.code === 'Space') {
+            spacePressed.current = false;
+            fc.defaultCursor = 'default';
+            fc.renderAll();
+          }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        window.addEventListener('keyup', onKeyUp);
+
+        // Store for cleanup
+        handlersRef.current = { handleResize, onKeyDown, onKeyUp };
+
+        fc.on('mouse:down', (opt) => {
+          if (spacePressed.current || opt.e.button === 1) {
+            opt.e.preventDefault();
+            isPanning.current = true;
+            lastPan.current = { x: opt.e.clientX, y: opt.e.clientY };
+            fc.selection = false;
+            fc.defaultCursor = 'grabbing';
+          }
+        });
+        fc.on('mouse:move', (opt) => {
+          if (!isPanning.current) return;
+          fc.relativePan({
+            x: opt.e.clientX - lastPan.current.x,
+            y: opt.e.clientY - lastPan.current.y,
+          });
+          lastPan.current = { x: opt.e.clientX, y: opt.e.clientY };
+        });
+        fc.on('mouse:up', () => {
+          if (isPanning.current) {
+            isPanning.current = false;
+            fc.selection = true;
+            fc.defaultCursor = spacePressed.current ? 'grab' : 'default';
+          }
+        });
+
+        // ── selection toolbar position ──
+        const updateSelBounds = () => {
+          const obj = fc.getActiveObject();
+          if (!obj) { setSelectedBounds(null); return; }
+          const b = obj.getBoundingRect();
+          setSelectedBounds({ x: b.left + b.width / 2, y: b.top - 48 });
+        };
+        fc.on('selection:created', updateSelBounds);
+        fc.on('selection:updated', updateSelBounds);
+        fc.on('object:moving',    updateSelBounds);
+        fc.on('object:scaling',   updateSelBounds);
+        fc.on('object:rotating',  updateSelBounds);
+        fc.on('selection:cleared', () => setSelectedBounds(null));
+        fc.on('mouse:up',          updateSelBounds);
+
+        // ── debounced real-time save on any canvas mutation ──
+        const scheduleSave = () => {
+          const id = canvasIdRef.current;
+          if (!id || id === 'new' || !fabricCanvasRef.current || isSavingRef.current) return;
+          clearTimeout(debounceTimer.current);
+          debounceTimer.current = setTimeout(async () => {
+            isSavingRef.current = true;
+            try {
+              const canvasJSON = fabricCanvasRef.current.toJSON();
+              const uid = userRef.current?.uid || null;
+              lastSavedBy.current = uid;
+              await canvasService.updateCanvas(id, { canvasJSON, userId: uid });
+            } catch (e) {
+              console.error('Real-time save failed:', e);
+            } finally {
+              isSavingRef.current = false;
+            }
+          }, 600);
+        };
+
+        fc.on('object:added',    scheduleSave);
+        fc.on('object:modified', scheduleSave);
+        fc.on('object:removed',  scheduleSave);
+        fc.on('path:created',    scheduleSave);
 
         // Load from Firestore if canvasId exists and is not "new"
         if (canvasId && canvasId !== 'new') {
@@ -44,8 +185,12 @@ export const useCanvas = (canvasId) => {
 
             // Subscribe to real-time updates
             unsubscribe = canvasService.subscribeToCanvas(canvasId, (data) => {
+              // Skip if we are currently in the middle of saving
               if (isSavingRef.current) return;
-              
+              // Skip if this snapshot was triggered by our own save
+              const currentUid = userRef.current?.uid;
+              if (currentUid && data.userId === currentUid && lastSavedBy.current === currentUid) return;
+
               if (data.canvasJSON && fabricCanvasRef.current) {
                 const activeObject = fabricCanvasRef.current.getActiveObject();
                 if (!activeObject) {
@@ -68,6 +213,11 @@ export const useCanvas = (canvasId) => {
     initCanvas();
 
     return () => {
+      const { handleResize, onKeyDown, onKeyUp } = handlersRef.current;
+      if (handleResize) window.removeEventListener('resize', handleResize);
+      if (onKeyDown)    window.removeEventListener('keydown', onKeyDown);
+      if (onKeyUp)      window.removeEventListener('keyup', onKeyUp);
+      clearTimeout(debounceTimer.current);
       if (unsubscribe) {
         unsubscribe();
       }
@@ -87,8 +237,6 @@ export const useCanvas = (canvasId) => {
       fill: '#3498db',
       width: 100,
       height: 100,
-      stroke: '#2980b9',
-      strokeWidth: 2,
     });
     fabricCanvasRef.current.add(rect);
     fabricCanvasRef.current.setActiveObject(rect);
@@ -103,8 +251,6 @@ export const useCanvas = (canvasId) => {
       top: 150,
       fill: '#e74c3c',
       radius: 50,
-      stroke: '#c0392b',
-      strokeWidth: 2,
     });
     fabricCanvasRef.current.add(circle);
     fabricCanvasRef.current.setActiveObject(circle);
@@ -123,6 +269,35 @@ export const useCanvas = (canvasId) => {
     });
     fabricCanvasRef.current.add(text);
     fabricCanvasRef.current.setActiveObject(text);
+    fabricCanvasRef.current.renderAll();
+  };
+
+  const addArrow = () => {
+    if (!fabricCanvasRef.current) return;
+
+    const line = new fabric.Line([50, 0, 200, 0], {
+      stroke: '#2c3e50',
+      strokeWidth: 3,
+      selectable: false,
+    });
+
+    const arrowhead = new fabric.Triangle({
+      width: 16,
+      height: 20,
+      fill: '#2c3e50',
+      left: 192,
+      top: -10,
+      angle: 90,
+      selectable: false,
+    });
+
+    const group = new fabric.Group([line, arrowhead], {
+      left: 150,
+      top: 200,
+    });
+
+    fabricCanvasRef.current.add(group);
+    fabricCanvasRef.current.setActiveObject(group);
     fabricCanvasRef.current.renderAll();
   };
 
@@ -180,13 +355,14 @@ export const useCanvas = (canvasId) => {
     isSavingRef.current = true;
     const canvasJSON = fabricCanvasRef.current.toJSON();
     
+    const userId = user?.uid || null;
     try {
       if (!currentId || currentId === 'new') {
-        const newId = await canvasService.saveCanvas({ canvasJSON });
+        const newId = await canvasService.saveCanvas({ canvasJSON, userId });
         isSavingRef.current = false;
         return newId;
       } else {
-        await canvasService.updateCanvas(currentId, { canvasJSON });
+        await canvasService.updateCanvas(currentId, { canvasJSON, userId });
         isSavingRef.current = false;
       }
     } catch (error) {
@@ -196,7 +372,7 @@ export const useCanvas = (canvasId) => {
     }
   };
 
-  const exportCanvas = () => {
+  const exportCanvas = (filename) => {
     if (!fabricCanvasRef.current) return;
     
     const dataURL = fabricCanvasRef.current.toDataURL({
@@ -204,9 +380,73 @@ export const useCanvas = (canvasId) => {
       quality: 1,
     });
     const link = document.createElement('a');
-    link.download = `canvas-${canvasId || 'export'}.png`;
+    link.download = `${filename || canvasId || 'canvas'}.png`;
     link.href = dataURL;
     link.click();
+  };
+
+  const zoomIn = () => {
+    if (!fabricCanvasRef.current) return;
+    const fc = fabricCanvasRef.current;
+    const center = { x: fc.getWidth() / 2, y: fc.getHeight() / 2 };
+    const zoom = Math.min(fc.getZoom() * 1.25, 5);
+    fc.zoomToPoint(center, zoom);
+    const level = Math.round(zoom * 100);
+    setZoomLevel(level);
+    return level;
+  };
+
+  const zoomOut = () => {
+    if (!fabricCanvasRef.current) return;
+    const fc = fabricCanvasRef.current;
+    const center = { x: fc.getWidth() / 2, y: fc.getHeight() / 2 };
+    const zoom = Math.max(fc.getZoom() * 0.8, 0.1);
+    fc.zoomToPoint(center, zoom);
+    const level = Math.round(zoom * 100);
+    setZoomLevel(level);
+    return level;
+  };
+
+  const resetZoom = () => {
+    if (!fabricCanvasRef.current) return;
+    fabricCanvasRef.current.setViewportTransform([1, 0, 0, 1, 0, 0]);
+    setZoomLevel(100);
+  };
+
+  const bringForward = () => {
+    const fc = fabricCanvasRef.current;
+    if (!fc) return;
+    const obj = fc.getActiveObject();
+    if (!obj) return;
+    fc.bringObjectForward(obj);
+    fc.renderAll();
+  };
+
+  const sendBackward = () => {
+    const fc = fabricCanvasRef.current;
+    if (!fc) return;
+    const obj = fc.getActiveObject();
+    if (!obj) return;
+    fc.sendObjectBackwards(obj);
+    fc.renderAll();
+  };
+
+  const bringToFront = () => {
+    const fc = fabricCanvasRef.current;
+    if (!fc) return;
+    const obj = fc.getActiveObject();
+    if (!obj) return;
+    fc.bringObjectToFront(obj);
+    fc.renderAll();
+  };
+
+  const sendToBack = () => {
+    const fc = fabricCanvasRef.current;
+    if (!fc) return;
+    const obj = fc.getActiveObject();
+    if (!obj) return;
+    fc.sendObjectToBack(obj);
+    fc.renderAll();
   };
 
   return {
@@ -214,9 +454,19 @@ export const useCanvas = (canvasId) => {
     fabricCanvasRef,
     selectedTool,
     setSelectedTool,
+    zoomLevel,
+    selectedBounds,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    bringForward,
+    sendBackward,
+    bringToFront,
+    sendToBack,
     addRectangle,
     addCircle,
     addText,
+    addArrow,
     enablePenTool,
     disablePenTool,
     deleteSelected,

@@ -1,11 +1,13 @@
 import { db } from './firebase';
-import { collection, addDoc, updateDoc, doc, onSnapshot, getDoc } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, onSnapshot, getDoc, setDoc, deleteDoc, query, orderBy, serverTimestamp } from 'firebase/firestore';
 
 export const canvasService = {
   async saveCanvas(canvasData) {
     try {
+      // Strip undefined values — Firestore rejects them
+      const clean = JSON.parse(JSON.stringify(canvasData));
       const docRef = await addDoc(collection(db, 'canvases'), {
-        ...canvasData,
+        ...clean,
         createdAt: new Date(),
         updatedAt: new Date()
       });
@@ -19,9 +21,11 @@ export const canvasService = {
 
   async updateCanvas(canvasId, canvasData) {
     try {
+      // Strip undefined values — Firestore rejects them
+      const clean = JSON.parse(JSON.stringify(canvasData));
       const canvasRef = doc(db, 'canvases', canvasId);
       await updateDoc(canvasRef, {
-        ...canvasData,
+        ...clean,
         updatedAt: new Date()
       });
       console.log('Canvas updated:', canvasId);
@@ -58,5 +62,55 @@ export const canvasService = {
       console.error('Error getting canvas:', error);
       throw error;
     }
-  }
+  },
+
+  // ── Presence ──────────────────────────────────────────────────────────────
+  async joinPresence(canvasId, user) {
+    const ref = doc(db, 'canvases', canvasId, 'presence', user.uid);
+    await setDoc(ref, {
+      uid:         user.uid,
+      displayName: user.displayName || null,
+      email:       user.email       || null,
+      photoURL:    user.photoURL    || null,
+      joinedAt:    new Date(),
+    });
+    return ref;
+  },
+
+  async leavePresence(canvasId, uid) {
+    try {
+      await deleteDoc(doc(db, 'canvases', canvasId, 'presence', uid));
+    } catch (_) { /* ignore */ }
+  },
+
+  subscribeToPresence(canvasId, callback) {
+    return onSnapshot(
+      collection(db, 'canvases', canvasId, 'presence'),
+      (snap) => callback(snap.docs.map(d => d.data()))
+    );
+  },
+
+  // ── Comments ──────────────────────────────────────────────────────────────
+  async addComment(canvasId, commentData) {
+    const ref = collection(db, 'canvases', canvasId, 'comments');
+    await addDoc(ref, {
+      ...commentData,
+      createdAt: serverTimestamp(),
+    });
+  },
+
+  async resolveComment(canvasId, commentId, resolved) {
+    const ref = doc(db, 'canvases', canvasId, 'comments', commentId);
+    await updateDoc(ref, { resolved });
+  },
+
+  subscribeToComments(canvasId, callback) {
+    const q = query(
+      collection(db, 'canvases', canvasId, 'comments'),
+      orderBy('createdAt', 'asc')
+    );
+    return onSnapshot(q, (snap) => {
+      callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+  },
 };

@@ -1,4 +1,4 @@
-# KITE — Draw Together. Live.
+# KITE: Draw Together. Live.
 
 A real-time collaborative canvas with AI-powered diagram generation. Describe any system in plain English and get a fully editable Mermaid flowchart on your canvas in under 2 seconds. Every stroke syncs instantly across all sessions via Firebase — no reload, no lag.
 

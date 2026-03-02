@@ -42,6 +42,7 @@ A real-time collaborative canvas with AI-powered diagram generation. Describe an
    VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    VITE_FIREBASE_APP_ID=your_app_id
+   VITE_GEMINI_API_KEY=your_api_key
 ```
 
 4. **Start the development server**
@@ -76,6 +77,7 @@ A real-time collaborative canvas with AI-powered diagram generation. Describe an
 - **Rectangle**: Add a rectangle to the canvas
 - **Circle**: Add a circle to the canvas
 - **Text**: Add editable text
+- **Arrow**: Add arrows to your flow
 - **Pen**: Draw freehand with the pen tool
 - **Color**: Change the color of selected objects
 - **Save**: Manually save your canvas
@@ -184,6 +186,7 @@ User B sees User A's changes
 ## Thanks!
 
 For issues or questions, please open an issue on GitHub.
+Also this project is under continuous improvements to match industry standards any help or fixes would be appreciated
 
 ---
 

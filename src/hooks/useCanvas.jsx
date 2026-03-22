@@ -36,7 +36,7 @@ export const useCanvas = (canvasId, user) => {
         fabricCanvasRef.current = new fabric.Canvas(canvasRef.current, {
           width: w,
           height: h,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#0e0e0e',
           selection: true,
           selectionColor:        'rgba(74,144,217,0.08)',
           selectionBorderColor:  'rgba(74,144,217,0.4)',
@@ -228,13 +228,25 @@ export const useCanvas = (canvasId, user) => {
     };
   }, [canvasId]);
 
-  const addRectangle = () => {
+  // Helper to convert hex to rgba
+  const hexToRgba = (hex, alpha) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const FILL_OPACITY = 0.15;
+
+  const addRectangle = (color = '#4ade80') => {
     if (!fabricCanvasRef.current) return;
     
     const rect = new fabric.Rect({
       left: 100,
       top: 100,
-      fill: '#3498db',
+      fill: hexToRgba(color, FILL_OPACITY),
+      stroke: color,
+      strokeWidth: 2,
       width: 100,
       height: 100,
     });
@@ -243,13 +255,15 @@ export const useCanvas = (canvasId, user) => {
     fabricCanvasRef.current.renderAll();
   };
 
-  const addCircle = () => {
+  const addCircle = (color = '#4ade80') => {
     if (!fabricCanvasRef.current) return;
     
     const circle = new fabric.Circle({
       left: 150,
       top: 150,
-      fill: '#e74c3c',
+      fill: hexToRgba(color, FILL_OPACITY),
+      stroke: color,
+      strokeWidth: 2,
       radius: 50,
     });
     fabricCanvasRef.current.add(circle);
@@ -265,26 +279,28 @@ export const useCanvas = (canvasId, user) => {
       top: 200,
       fontFamily: 'Arial',
       fontSize: 24,
-      fill: '#2c3e50',
+      fill: '#ffffff',
     });
     fabricCanvasRef.current.add(text);
     fabricCanvasRef.current.setActiveObject(text);
     fabricCanvasRef.current.renderAll();
   };
 
-  const addArrow = () => {
+  const addArrow = (color = '#4ade80') => {
     if (!fabricCanvasRef.current) return;
 
     const line = new fabric.Line([50, 0, 200, 0], {
-      stroke: '#2c3e50',
-      strokeWidth: 3,
+      stroke: color,
+      strokeWidth: 2,
       selectable: false,
     });
 
     const arrowhead = new fabric.Triangle({
       width: 16,
       height: 20,
-      fill: '#2c3e50',
+      fill: hexToRgba(color, FILL_OPACITY),
+      stroke: color,
+      strokeWidth: 2,
       left: 192,
       top: -10,
       angle: 90,
@@ -301,11 +317,25 @@ export const useCanvas = (canvasId, user) => {
     fabricCanvasRef.current.renderAll();
   };
 
+  const addLine = (color = '#4ade80') => {
+    if (!fabricCanvasRef.current) return;
+
+    const line = new fabric.Line([50, 0, 200, 0], {
+      stroke: color,
+      strokeWidth: 2,
+      selectable: true,
+    });
+
+    fabricCanvasRef.current.add(line);
+    fabricCanvasRef.current.setActiveObject(line);
+    fabricCanvasRef.current.renderAll();
+  };
+
   const enablePenTool = () => {
     if (!fabricCanvasRef.current) return;
     
     fabricCanvasRef.current.isDrawingMode = true;
-    fabricCanvasRef.current.freeDrawingBrush.color = '#000000';
+    fabricCanvasRef.current.freeDrawingBrush.color = '#e8e8e8';
     fabricCanvasRef.current.freeDrawingBrush.width = 3;
   };
 
@@ -330,7 +360,7 @@ export const useCanvas = (canvasId, user) => {
     if (!fabricCanvasRef.current) return;
     
     fabricCanvasRef.current.clear();
-    fabricCanvasRef.current.backgroundColor = '#ffffff';
+    fabricCanvasRef.current.backgroundColor = '#0e0e0e';
     fabricCanvasRef.current.renderAll();
   };
 
@@ -339,7 +369,12 @@ export const useCanvas = (canvasId, user) => {
     
     const activeObject = fabricCanvasRef.current.getActiveObject();
     if (activeObject) {
-      activeObject.set('fill', color);
+      // Set both stroke and fill with matching color
+      // Stroke: full color, Fill: same color with 15% opacity
+      activeObject.set({
+        stroke: color,
+        fill: hexToRgba(color, FILL_OPACITY)
+      });
       fabricCanvasRef.current.renderAll();
     }
   };
@@ -467,8 +502,7 @@ export const useCanvas = (canvasId, user) => {
     addCircle,
     addText,
     addArrow,
-    enablePenTool,
-    disablePenTool,
+    addLine,
     deleteSelected,
     clearCanvas,
     saveCanvas,

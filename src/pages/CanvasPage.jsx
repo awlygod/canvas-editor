@@ -58,7 +58,6 @@ const CanvasPage = () => {
   const [newComment, setNewComment] = useState('');
   const [ctxMenu, setCtxMenu] = useState({ show: false, x: 0, y: 0 });
   const [paletteTop, setPaletteTop] = useState(null);
-  const [darkCanvas, setDarkCanvas] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [shareModal, setShareModal] = useState({ open: false, url: '', saving: false });
@@ -88,8 +87,7 @@ const CanvasPage = () => {
     addCircle,
     addText,
     addArrow,
-    enablePenTool,
-    disablePenTool,
+    addLine,
     deleteSelected,
     clearCanvas,
     saveCanvas,
@@ -149,7 +147,7 @@ const CanvasPage = () => {
         if (e.key === 'a') addArrow();
         return;
       }
-      if (e.key === 'p') { handleEnablePen(); return; }
+
       if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelected(); return; }
       if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); handleSave(); }
     };
@@ -207,12 +205,6 @@ const CanvasPage = () => {
 
   const handleToolChange = (tool) => {
     setSelectedTool(tool);
-    if (tool !== 'pen') disablePenTool();
-  };
-
-  const handleEnablePen = () => {
-    setSelectedTool('pen');
-    enablePenTool();
   };
 
   const handleClear = () => {
@@ -229,14 +221,7 @@ const CanvasPage = () => {
   const handleZoomOut = () => zoomOut();
   const handleFit     = () => resetZoom();
 
-  const handleToggleDarkCanvas = () => {
-    const next = !darkCanvas;
-    setDarkCanvas(next);
-    if (fabricCanvasRef.current) {
-      fabricCanvasRef.current.backgroundColor = next ? '#1a1a1a' : '#ffffff';
-      fabricCanvasRef.current.renderAll();
-    }
-  };
+
 
   const handleMouseMoveOnWrap = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -250,10 +235,6 @@ const CanvasPage = () => {
 
   const handleAddComment = async () => {
     if (!newComment.trim() || !user) return;
-    if (!currentCanvasId || currentCanvasId === 'new') {
-      alert('Please save the canvas first before adding comments.');
-      return;
-    }
     const clsMap = ['ca', 'cb', 'cd'];
     const initials = getInitials(user);
     const name = user.displayName || user.email?.split('@')[0] || 'You';
@@ -309,7 +290,7 @@ const CanvasPage = () => {
 
       // 4. Clear canvas and draw
       fabricCanvasRef.current.clear();
-      fabricCanvasRef.current.backgroundColor = darkCanvas ? '#1a1a1a' : '#ffffff';
+      fabricCanvasRef.current.backgroundColor = '#1a1a1a';
      // console.log('LAYOUT RESULT:', layoutNodes(parsedNodes, parsedEdges));
       drawFlowchart(fabricCanvasRef.current, positionedNodes, edges);
 
@@ -546,14 +527,6 @@ const CanvasPage = () => {
             AI
           </button>
 
-          <button className={`h-btn h-btn-ghost${darkCanvas ? ' h-btn-active' : ''}`} onClick={handleToggleDarkCanvas} title="Toggle dark canvas">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-            Dark
-          </button>
-
           <div className="h-div" />
 
           <button className="h-btn h-btn-ghost" onClick={handleNewCanvas}>
@@ -586,22 +559,12 @@ const CanvasPage = () => {
             </svg>
             Export
           </button>
-
-          <div className="h-div" />
-
-          <button className="h-btn h-btn-home" onClick={() => navigate('/')}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                 stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9 22 9 12 15 12 15 22"/>
-            </svg>
-          </button>
         </div>
       </header>
 
       {/* ─── CANVAS AREA ─── */}
       <div
-        className={`cp-canvas-wrap${darkCanvas ? ' cp-dark' : ''}`}
+        className="cp-canvas-wrap cp-dark"
         onMouseMove={handleMouseMoveOnWrap}
         onContextMenu={handleContextMenu}
       >
@@ -649,7 +612,7 @@ const CanvasPage = () => {
             <button
               className={`p-tool${selectedTool === 'rectangle' ? ' active' : ''}`}
               data-tip="Rectangle  [R]"
-              onClick={() => { handleToolChange('rectangle'); addRectangle(); }}
+              onClick={() => { handleToolChange('rectangle'); addRectangle(activeColor); }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -661,7 +624,7 @@ const CanvasPage = () => {
             <button
               className={`p-tool${selectedTool === 'circle' ? ' active' : ''}`}
               data-tip="Circle  [C]"
-              onClick={() => { handleToolChange('circle'); addCircle(); }}
+              onClick={() => { handleToolChange('circle'); addCircle(activeColor); }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -673,7 +636,7 @@ const CanvasPage = () => {
             <button
               className={`p-tool${selectedTool === 'line' ? ' active' : ''}`}
               data-tip="Line  [L]"
-              onClick={() => handleToolChange('line')}
+              onClick={() => { handleToolChange('line'); addLine(activeColor); }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -688,7 +651,7 @@ const CanvasPage = () => {
             <button
               className={`p-tool${selectedTool === 'arrow' ? ' active' : ''}`}
               data-tip="Arrow  [A]"
-              onClick={() => { handleToolChange('arrow'); addArrow(); }}
+              onClick={() => { handleToolChange('arrow'); addArrow(activeColor); }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                    stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
@@ -699,22 +662,8 @@ const CanvasPage = () => {
             </button>
           </div>
 
-          {/* Draw / Text */}
+          {/* Text */}
           <div className="p-group">
-            <button
-              className={`p-tool${selectedTool === 'pen' ? ' active' : ''}`}
-              data-tip="Pen  [P]"
-              onClick={handleEnablePen}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                   stroke="currentColor" strokeWidth="1.5" strokeLinecap="square">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                <path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/>
-              </svg>
-              <span className="p-tool-label">Pen</span>
-            </button>
-
             <button
               className={`p-tool${selectedTool === 'text' ? ' active' : ''}`}
               data-tip="Text  [T]"
@@ -883,7 +832,6 @@ const CanvasPage = () => {
                   {cm.resolved ? 'Unresolve' : 'Resolve'}
                 </button>
                 <button className="cc-action">Reply</button>
-                <button className="cc-action">Pin</button>
               </div>
             </div>
           ))}

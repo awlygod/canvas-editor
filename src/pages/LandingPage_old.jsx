@@ -6,6 +6,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Smooth scroll behavior
     document.documentElement.style.scrollBehavior = 'smooth';
   }, []);
 
@@ -78,7 +79,6 @@ const LandingPage = () => {
       </section>
 
       <hr className="divider"/>
-
       {/* FEATURES */}
       <section id="features">
         <div className="section-header">
@@ -313,6 +313,233 @@ const LandingPage = () => {
         <div className="footer-logo">kite<span>.</span></div>
         <div className="footer-copy">© 2025 kite. open source.</div>
       </footer>
+    </div>
+  );
+          </div>
+        </div>
+
+        <div className="auth-right fade-up" style={{transitionDelay:'0.15s'}}>
+          <div className="auth-card-wrap">
+            <div className="auth-card">
+              <div className="ac-title">Sign In</div>
+              <div className="ac-sub">Welcome back</div>
+              <div className="ac-field">
+                <label>Email</label>
+                <div className="ac-input focus">alex@studio.io</div>
+              </div>
+              <div className="ac-field">
+                <label>Password</label>
+                <div className="ac-input">••••••••••</div>
+              </div>
+              <button className="ac-btn">Continue →</button>
+              <div className="ac-divider">or</div>
+              <button className="ac-oauth">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <circle cx="7" cy="7" r="6" stroke="#888" strokeWidth="1.2"/>
+                  <path d="M7 3V7L10 9" stroke="#888" strokeWidth="1.2" strokeLinecap="round"/>
+                </svg>
+                Continue with Google
+              </button>
+            </div>
+            <div className="auth-card signup">
+              <div className="ac-title">Sign Up</div>
+              <div className="ac-sub">Start for free</div>
+              <div className="ac-field">
+                <label>Name</label>
+                <div className="ac-input">Your name</div>
+              </div>
+              <div className="ac-field">
+                <label>Email</label>
+                <div className="ac-input">you@example.com</div>
+              </div>
+              <div className="ac-field">
+                <label>Password</label>
+                <div className="ac-input">••••••••</div>
+              </div>
+              <button className="ac-btn blue">Create Account →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* REALTIME COMMENTS */}
+      <section className="comments-section" id="comments">
+        <div className="comments-inner">
+          <div className="sec-label">Collaboration</div>
+          <h2 className="sec-title fade-up">Leave a note.<br/>Anywhere on the canvas.</h2>
+          <div className="comments-grid">
+            <div className="comments-left fade-up">
+              <p className="cm-desc">Pin comments directly to shapes, regions, or blank space. Teammates see them in real time. No more back-and-forth in Slack trying to describe what you mean.</p>
+              <div className="cm-feat-list">
+                <div className="cm-feat">
+                  <div className="cm-feat-icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M3 3H15V12H10L7 15V12H3V3Z" stroke="white" strokeWidth="1.3" strokeLinejoin="round"/>
+                      <path d="M6 7H12M6 9.5H10" stroke="white" strokeWidth="1.2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="cm-feat-text">Pinned comment threads</div>
+                    <div className="cm-feat-sub">Attach a comment to any point on the canvas</div>
+                  </div>
+                </div>
+                <div className="cm-feat">
+                  <div className="cm-feat-icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <circle cx="9" cy="9" r="6" stroke="white" strokeWidth="1.3"/>
+                      <path d="M6 9L8 11L12 7" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="cm-feat-text">Resolve &amp; dismiss</div>
+                    <div className="cm-feat-sub">Mark threads as resolved to keep the canvas clean</div>
+                  </div>
+                </div>
+                <div className="cm-feat">
+                  <div className="cm-feat-icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M9 2L10.5 6.5H15.5L11.5 9.2L13 14L9 11.2L5 14L6.5 9.2L2.5 6.5H7.5L9 2Z" stroke="white" strokeWidth="1.2" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="cm-feat-text">@mention collaborators</div>
+                    <div className="cm-feat-sub">Tag anyone on the canvas to notify them instantly</div>
+                  </div>
+                </div>
+                <div className="cm-feat">
+                  <div className="cm-feat-icon">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <path d="M2 9C2 5.134 5.134 2 9 2C12.866 2 16 5.134 16 9C16 12.866 12.866 16 9 16C7.8 16 6.67 15.7 5.7 15.17L2 16L2.83 12.3C2.3 11.33 2 10.2 2 9Z" stroke="white" strokeWidth="1.3" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="cm-feat-text">Live comment feed</div>
+                    <div className="cm-feat-sub">All comments update in real time across every session</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="comments-right fade-up" style={{transitionDelay:'0.15s'}}>
+              <div className="comment-canvas-mock">
+                <div className="ccm-top">
+                  <div className="dot dr"></div>
+                  <div className="dot dy"></div>
+                  <div className="dot dg"></div>
+                </div>
+                <div className="ccm-body">
+                  <div className="ccm-canvas-area"></div>
+                  <div className="comment-pin pin1" style={{animationDelay:'0s'}}>
+                    <div className="cp-bubble">
+                      <div className="cp-user" style={{color:'var(--accent)'}}>alice</div>
+                      <div className="cp-text">Can we make this box bigger? It&apos;s getting cut off on mobile.</div>
+                      <div className="cp-time">2 min ago</div>
+                    </div>
+                    <div className="cp-dot" style={{background:'var(--accent)'}}>A</div>
+                  </div>
+                  <div className="comment-pin pin2" style={{animationDelay:'1.5s'}}>
+                    <div className="cp-bubble">
+                      <div className="cp-user" style={{color:'var(--accent2)'}}>bob</div>
+                      <div className="cp-text">Love this layout. The flow makes sense now 👌</div>
+                      <div className="cp-time">just now</div>
+                    </div>
+                    <div className="cp-dot" style={{background:'var(--accent2)'}}>B</div>
+                  </div>
+                  <div className="comment-pin pin3" style={{animationDelay:'0.7s'}}>
+                    <div className="cp-bubble">
+                      <div className="cp-user" style={{color:'#2d6a4f'}}>maya</div>
+                      <div className="cp-text">@alice resolved. Updated the dimensions.</div>
+                      <div className="cp-time">1 min ago</div>
+                    </div>
+                    <div className="cp-dot" style={{background:'#2d6a4f'}}>M</div>
+                  </div>
+                </div>
+                <div className="ccm-users">
+                  <div className="user-avatar" style={{background:'var(--accent)'}}>A</div>
+                  <div className="user-avatar" style={{background:'var(--accent2)'}}>B</div>
+                  <div className="user-avatar" style={{background:'#2d6a4f'}}>M</div>
+                  <div className="ccm-users-label">3 people viewing</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="how" id="how">
+        <div className="how-inner">
+          <div className="sec-label">The workflow</div>
+          <h2 className="how-title">Up and drawing in seconds.</h2>
+          <div className="steps">
+            <div className="step">
+              <div className="step-num">01</div>
+              <div className="step-title">Sign Up or Jump In</div>
+              <p className="step-desc">Create an account to own your canvases, or jump straight in as a guest. No friction, no mandatory sign-up.</p>
+            </div>
+            <div className="step">
+              <div className="step-num">02</div>
+              <div className="step-title">Draw or Generate</div>
+              <p className="step-desc">Use the toolbar to sketch manually, or describe what you need and let the AI generate a flowchart in seconds.</p>
+            </div>
+            <div className="step">
+              <div className="step-num">03</div>
+              <div className="step-title">Share the Link</div>
+              <p className="step-desc">Save once. Your canvas gets a permanent URL. Copy and send. Anyone with the link can jump right in.</p>
+            </div>
+            <div className="step">
+              <div className="step-num">04</div>
+              <div className="step-title">Collaborate Live</div>
+              <p className="step-desc">Draw together, leave pinned comments, and watch changes appear instantly. Like being in the same room.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* TECH */}
+      <section className="tech">
+        <div className="fade-up">
+          <div className="sec-label">Built with</div>
+          <h2 className="sec-title" style={{marginBottom:'8px'}}>A modern,<br/>proven stack.</h2>
+        </div>
+        <div className="fade-up" style={{transitionDelay:'0.1s'}}>
+          <div className="tech-badges">
+            <div className="tb2 hl">React 18</div>
+            <div className="tb2 hl">Fabric.js 6</div>
+            <div className="tb2 hl">Firebase</div>
+            <div className="tb2 hl2">AI / LLM</div>
+            <div className="tb2 hl2">Mermaid</div>
+            <div className="tb2">Vite</div>
+            <div className="tb2">React Router v6</div>
+            <div className="tb2">Firestore</div>
+            <div className="tb2">Firebase Auth</div>
+            <div className="tb2">Realtime Listeners</div>
+            <div className="tb2">Vercel</div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <div className="cta-section">
+        <h2 className="cta-title">Your canvas is<br/>waiting.</h2>
+        <p className="cta-sub">Jump in and start drawing. Sketch manually or generate with AI. Invite anyone. Your ideas deserve a shared surface.</p>
+        <div className="cta-actions">
+          <a href="/canvas/new" className="btn-white" onClick={handleStart}>Open the Canvas →</a>
+          <a href="https://github.com/awlygod/canvas-editor" className="btn-white-ghost" target="_blank" rel="noreferrer">View on GitHub</a>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <footer className="lp-footer">
+        <div className="footer-logo">Kite<span>.</span></div>
+        <p>Built with ♥ using React, Fabric.js &amp; Firebase</p>
+        <div className="footer-links">
+          <a href="https://github.com/awlygod/canvas-editor" target="_blank" rel="noreferrer">GitHub</a>
+          <a href="/canvas/new" onClick={handleStart}>Live Demo</a>
+          <a href="#">Docs</a>
+        </div>
+      </footer>
+
     </div>
   );
 };

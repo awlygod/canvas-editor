@@ -1,21 +1,17 @@
-#  Canvas Editor
+# KITE: Draw Together. Live.
 
-A real-time collaborative canvas editor built with React, Fabric.js, and Firebase. Create, edit, and share your drawings with automatic cloud synchronization.
+A real-time collaborative canvas with AI-powered diagram generation. Describe any system in plain English and get a fully editable Mermaid flowchart on your canvas in under 2 seconds. Every stroke syncs instantly across all sessions via Firebase — no reload, no lag.
 
-##  Features
+## Features
 
-- **Draw & Edit**: Create shapes, text, and freehand drawings with an intuitive toolbar
-- **Real-time Sync**: Changes are automatically synchronized across all users viewing the same canvas
-- **Auto-Save**: Your work is automatically saved to the cloud every 5 seconds
-- **Export PNG**: Download your canvas as a high-quality PNG image
-- **Shareable Links**: Each canvas has a unique URL that can be shared with others
-- **Rich Editing Tools**:
-  - Rectangle and Circle shapes
-  - Text editing with custom fonts
-  - Freehand drawing with pen tool
-  - Color picker for customizing objects
-  - Move, resize, and rotate any object
-  - Delete and clear canvas options
+- **Real-Time Sync**: Every stroke syncs instantly across all sessions via Firebase Realtime Listeners — no reload, no lag
+- **AI Flowchart Generation**: Describe any system in plain English and get a fully editable Mermaid diagram on canvas in under 2 seconds
+- **Pinned Comment Threads**: Pin comments to any shape or region, @mention collaborators, and resolve threads — all in real time
+- **Auto-Save**: Your work is automatically saved to Firebase every 5 seconds
+- **Rich Drawing Tools**: Rectangles, circles, text, freehand pen, color picker, move, resize, and rotate
+- **Shareable Links**: Each canvas gets a unique URL — collaborators jump in with no account or setup required
+- **Guest Access**: Start creating instantly with no mandatory sign-up
+- **PNG Export**: Download your canvas as a crisp, high-quality PNG
 
 ### Prerequisites
 
@@ -26,36 +22,36 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
 ### Installation
 
 1. **Clone the repository**
-   ```bash
+```bash
    git clone <your-repo-url>
    cd canvas-editor
-   ```
+```
 
 2. **Install dependencies**
-   ```bash
+```bash
    npm install
-   ```
-
+```
 
 3. **Configure environment variables**
-   
+
    Create a `.env` file in the root directory:
-   ```env
+```env
    VITE_FIREBASE_API_KEY=your_api_key
    VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
    VITE_FIREBASE_PROJECT_ID=your_project_id
    VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
    VITE_FIREBASE_APP_ID=your_app_id
-   ```
+   VITE_GEMINI_API_KEY=your_api_key
+```
 
 4. **Start the development server**
-   ```bash
+```bash
    npm run dev
-   ```
+```
 
 5. **Open your browser**
-   
+
    Navigate to `http://localhost:5173`
 
 ## How to Use
@@ -78,9 +74,10 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
 ### Toolbar Options
 
 - **Select**: Click to select and move objects
-- **Rectangle**: Add a blue rectangle to the canvas
-- **Circle**: Add a red circle to the canvas
+- **Rectangle**: Add a rectangle to the canvas
+- **Circle**: Add a circle to the canvas
 - **Text**: Add editable text
+- **Arrow**: Add arrows to your flow
 - **Pen**: Draw freehand with the pen tool
 - **Color**: Change the color of selected objects
 - **Save**: Manually save your canvas
@@ -92,21 +89,21 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
 
 1. After saving, copy the URL from your browser's address bar
 2. Share the URL with others
-3. Multiple users can view and edit the same canvas in real-time
-
+3. Multiple users can view and edit the same canvas in real time
 
 ## Tech Stack
 
 - **Frontend**: React 18 with Vite
 - **Canvas Library**: Fabric.js 6.x
-- **Database**: Firebase Firestore
+- **Database**: Firebase Firestore + Realtime Listeners
+- **AI/Diagrams**: LLM + Mermaid
+- **Auth**: Firebase Auth
 - **Routing**: React Router v6
-- **Styling**: Inline CSS (no external libraries)
+- **Deployment**: Vercel
 
 ## Database Schema
 
 ### Firestore Collection: `canvases`
-
 ```javascript
 {
   canvasJSON: {
@@ -129,10 +126,9 @@ A real-time collaborative canvas editor built with React, Fabric.js, and Firebas
 }
 ```
 
-## How It Works ??
+## How It Works
 
 ### Canvas Creation Flow
-
 ```
 User clicks "Start Creating"
     ↓
@@ -154,7 +150,6 @@ Auto-save enabled
 ```
 
 ### Canvas Loading Flow
-
 ```
 User opens /canvas/{id}
     ↓
@@ -172,7 +167,6 @@ Listen for changes from other users
 ```
 
 ### Real-time Synchronization
-
 ```
 User A edits canvas
     ↓
@@ -189,10 +183,11 @@ Canvas reloads with new data
 User B sees User A's changes
 ```
 
-## Thanks !
+## Thanks!
 
 For issues or questions, please open an issue on GitHub.
+Also this project is under continuous improvements to match industry standards any help or fixes would be appreciated
 
 ---
 
-**Built with ❤️ using React, Fabric.js, and Firebase**
+**Built with ❤️ using React, Fabric.js, Firebase, and AI**
